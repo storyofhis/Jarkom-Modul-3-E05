@@ -55,11 +55,12 @@ apt-get install squid -y
 ```
 apt-get update
 apt-get install dhcp-helper -y
+dhcp-helper -s 10.24.2.4
 ```
 
 melakukan forward DHCP Server dari IP `10.24.2.4` 
 ```
-dhcp-helper -s 10.24.2.4
+bash .bashrc
 ```
 
 
