@@ -28,13 +28,7 @@ nano /etc/dhcp/dhcpd.conf
 ```
 ```
 subnet 10.24.1.0 netmask 255.255.255.0 {
-    range 10.24.1.50 10.24.1.88;
-    range 10.24.1.120 10.24.1.155;
     option routers 10.24.1.1;
-    option broadcast-address 10.24.1.255;
-    option domain-name-servers 10.24.2.2;
-    default-lease-time 300;
-    max-lease-time 6900;
 }
 ```
 kemudian tambahkan `eth0` pada interfaces 
@@ -57,9 +51,33 @@ apt-get install squid -y
 ## 2
 > dan Ostania sebagai DHCP Relay (2). Loid dan Franky menyusun peta tersebut dengan hati-hati dan teliti.
 
+- `Ostania` Sebagai DHCP Relay
+```
+
+```
+
+
 ## 3
 > Semua client yang ada HARUS menggunakan konfigurasi IP dari DHCP Server.
+ubah semua Client menjadi 
+```
+auto eth0
+iface eth0 inet dhcp
+```
+
 > Client yang melalui Switch1 mendapatkan range IP dari [prefix IP].1.50 - [prefix IP].1.88 dan [prefix IP].1.120 - [prefix IP].1.155 (3)
+
+```
+subnet 10.24.1.0 netmask 255.255.255.0 {
+    range 10.24.1.50 10.24.1.88;
+    range 10.24.1.120 10.24.1.155;
+    option routers 10.24.1.1;
+    option broadcast-address 10.24.1.255;
+    option domain-name-servers 10.24.2.2;
+    default-lease-time 300;
+    max-lease-time 6900;
+}
+```
 
 ## 4
 > Client yang melalui Switch3 mendapatkan range IP dari [prefix IP].3.10 - [prefix IP].3.30 dan [prefix IP].3.60 - [prefix IP].3.85 (4)
