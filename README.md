@@ -10,6 +10,50 @@ Anggota:
 ## 1
 > Loid bersama Franky berencana membuat peta tersebut dengan kriteria WISE sebagai DNS Server, Westalis sebagai DHCP Server, Berlint sebagai Proxy Server (1)
 
+- `WISE` sebagai DNS Server : 
+```
+apt-get update
+apt-get install bind9 -y
+```
+
+- `Westalis` Sebagai DCHP
+```
+apt-get update
+apt-get install isc-dhcp-server -y
+```
+
+kemudian kita mengedit dhcpd.conf dengan menggunakan 
+```
+nano /etc/dhcp/dhcpd.conf
+```
+```
+subnet 10.24.1.0 netmask 255.255.255.0 {
+    range 10.24.1.50 10.24.1.88;
+    range 10.24.1.120 10.24.1.155;
+    option routers 10.24.1.1;
+    option broadcast-address 10.24.1.255;
+    option domain-name-servers 10.24.2.2;
+    default-lease-time 300;
+    max-lease-time 6900;
+}
+```
+kemudian tambahkan `eth0` pada interfaces 
+```
+nano /etc/default/isc-dhcp-server
+```
+<img width="749" alt="Screen Shot 2022-11-13 at 19 29 08" src="https://user-images.githubusercontent.com/72302421/201521688-735acbd6-152f-4acb-95a7-e6279d0ece4b.png">
+
+kemudian yang terakhir bisa melakukan restart 
+```
+service isc-dhcp-server restart
+```
+<img width="830" alt="Screen Shot 2022-11-13 at 19 32 08" src="https://user-images.githubusercontent.com/72302421/201521801-ed3f32b4-aca9-4f9d-9dd9-8d5bc8c4463a.png">
+
+- `Berlin` sebagai Proxy Server
+```
+apt-get update
+apt-get install squid -y
+```
 ## 2
 > dan Ostania sebagai DHCP Relay (2). Loid dan Franky menyusun peta tersebut dengan hati-hati dan teliti.
 
