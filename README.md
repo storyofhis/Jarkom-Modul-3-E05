@@ -97,3 +97,99 @@ subnet 10.24.1.0 netmask 255.255.255.0 {
 
 ## 7
 > Loid dan Franky berencana menjadikan Eden sebagai server untuk pertukaran informasi dengan alamat IP yang tetap dengan IP [prefix IP].3.13 (7).
+
+- Buka dan edit file `/etc/dhcp/dhcpd.conf` di Westalis
+```
+host Eden {
+    hardware ethernet 9e:56:8b:3a:2a:9b;
+    fixed-address 10.24.3.13;
+}
+```
+- Kita dapat mencari hardware ethernet dengan menggunakan `ip a` pada Eden dan melihat di baris link/ether.
+- Taruh hardware ethernet tersebut pada konfigurasi network Eden.
+```
+auto eth0
+iface eth0 inet dhcp
+hwaddress ether 9e:56:8b:3a:2a:9b
+```
+- Restart service isc-dhcp-server pada Westalis
+
+## Setting Proxy Server
+
+- Jalankan script berikut di Berlint
+```
+echo nameserver 192.168.122.1 > /etc/resolv.conf
+apt-get install squid -y
+```
+
+## 1
+> Client hanya dapat mengakses internet diluar (selain) hari & jam kerja (senin-jumat 08.00 - 17.00) dan hari libur (dapat mengakses 24 jam penuh)
+
+## 2
+> Adapun pada hari dan jam kerja sesuai nomor (1), client hanya dapat mengakses domain loid-work.com dan franky-work.com (IP tujuan domain dibebaskan)
+
+- Untuk menjawab no 1 dan 2, buat file `/etc/squid/allowed-workinghour-sites.acl` yang isinya
+```
+loid-work.com
+franky-work.com
+```
+- Lalu, buka dan edit file `/etc/squid/squid.conf` di Berlint. Tambahkan:
+```
+http_port 8080
+visible_hostname Berlint
+
+acl WORKING_HOUR time MTWHF 08:00-17:00
+acl HOLIDAY time SA
+acl WORKING_HOUR_SITES dstdomain "/etc/squid/allowed-workinghour-sites.acl"
+
+http_access allow WORKING_HOUR_SITES WORKING_HOUR
+http_access allow !WORKING_HOUR_SITES !WORKING_HOUR
+http_access allow !WORKING_HOUR_SITES HOLIDAY
+http_access deny all
+```
+- Jalankan `service squid restart`.
+
+# 3
+> Saat akses internet dibuka, client dilarang untuk mengakses web tanpa HTTPS. (Contoh web HTTP: http://example.com)
+
+- Buka dan edit file `/etc/squid/squid.conf` di Berlint. Tambahkan:
+```
+acl HTTPS_PORT port 443
+
+http_access deny !HTTPS_PORT
+```
+- http_access diatas diletakkan sebelum semua http_access lainnya.
+- Jalankan `service squid restart`.
+
+
+# 4
+> Agar menghemat penggunaan, akses internet dibatasi dengan kecepatan maksimum 128 Kbps pada setiap host (Kbps = kilobit per second; lakukan pengecekan pada tiap host, ketika 2 host akses internet pada saat bersamaan, keduanya mendapatkan speed maksimal yaitu 128 Kbps)
+
+- Buat file `/etc/squid/acl-bandwidth.conf` yang isinya
+```
+delay_pools 1
+delay_class 1 2
+delay_access 1 allow all
+delay_parameters 1 none 16000/16000
+```
+- Lalu, buka dan edit file `/etc/squid/squid.conf` di Berlint. Tambahkan:
+```
+include /etc/squid/acl-bandwidth.conf
+```
+- Jalankan `service squid restart`.
+
+# 5
+> Setelah diterapkan, ternyata peraturan nomor (4) mengganggu produktifitas saat hari kerja, dengan demikian pembatasan
+kecepatan hanya diberlakukan untuk pengaksesan internet pada hari libur
+
+- Buka dan edit `/etc/squid/acl-bandwidth.conf`. Tambahkan:
+```
+acl HOLIDAY time SA
+
+delay_access 1 allow HOLIDAY
+delay_access 1 deny all
+```
+- delay_access yang sebelumnya dihapus dan digantikan dengan delay_access diatas.
+- Jalankan `service squid restart`.
+
+
