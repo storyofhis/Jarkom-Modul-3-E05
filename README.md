@@ -87,13 +87,55 @@ subnet 10.24.1.0 netmask 255.255.255.0 {
 ```
 
 ## 4
-> Client yang melalui Switch3 mendapatkan range IP dari [prefix IP].3.10 - [prefix IP].3.30 dan [prefix IP].3.60 - [prefix IP].3.85 (4)
+> Client yang melalui Switch3 mendapatkan range IP dari [prefix IP].3.10 - [prefix IP].3.30 dan [prefix IP].3.60 - [prefix IP].3.85 (4)  
+
+Pada node Westalis, edit file ```/etc/dhcp/dhcpd.conf``` dengan menambahkan:  
+```
+range 10.24.3.10 10.24.3.30;
+range 10.24.3.60 10.24.3.85;
+```  
+pada subnet 10.24.3.0. Lalu jalankan ```service isc-dhcp-server restart``` pada node Westalis.
 
 ## 5
 > Client mendapatkan DNS dari WISE dan client dapat terhubung dengan internet melalui DNS tersebut. (5)
 
+Pada node WISE, edit file ```/etc/bind/named.conf.options``` dengan menambahkan:
+```
+forwarders {
+    192.168.122.1;
+};
+```  
+Comment ```dnssec-validation auto``` lalu tambahkan pula:
+```
+allow-query{any;};
+```  
+dan jalankan ```service bind9 restart```. Lalu pada node Westalis, edit  ```/etc/dhcp/dhcpd.conf```  dengan menambahkan:
+```
+option domain-name-servers 10.24.2.2;
+```
+pada subnet 10.24.1.0 dan subnet 10.24.3.0, dimana 10.24.2.2 merupakan IP node WISE.
+
 ## 6
 > Lama waktu DHCP server meminjamkan alamat IP kepada Client yang melalui Switch1 selama 5 menit sedangkan pada client yang melalui Switch3 selama 10 menit. Dengan waktu maksimal yang dialokasikan untuk peminjaman alamat IP selama 115 menit. (6)
+
+Pada node Westalis, edit file ```/etc/dhcp/dhcpd.conf``` menjadi:
+```
+subnet 10.24.1.0 netmask 255.255.255.0 {
+    ...
+    default-lease-time 300;
+    max-lease-time 6900;
+}
+```
+dan
+```
+subnet 10.24.3.0 netmask 255.255.255.0 {
+    ...
+    default-lease-time 600;
+    max-lease-time 6900;
+}
+```
+ Lalu jalankan ```service isc-dhcp-server restart```.
+
 
 ## 7
 > Loid dan Franky berencana menjadikan Eden sebagai server untuk pertukaran informasi dengan alamat IP yang tetap dengan IP [prefix IP].3.13 (7).
